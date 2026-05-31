@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import MiniTimer from "../Minitimer"; // Zkontroluj si správnou cestu k MiniTimeru
+import MiniTimer from "../MiniTimer"; // Zkontroluj si správnou cestu k MiniTimeru
 
 export default function Plan1() {
     const { data: session, status } = useSession();
