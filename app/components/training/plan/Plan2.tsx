@@ -46,7 +46,7 @@ export default function Plan2() {
 
                 {plan2.map((week) => (
                     <TabsContent key={week.week} value={`week${week.week}`}>
-                        <Accordion type="single" collapsible className="w-full">
+                        <Accordion className="w-full">
                             {week.days.map((day) => (
                                 <AccordionItem key={day.day} value={`day${day.day}`}>
                                     <AccordionTrigger className={`p-4 ${day.color} text-white`}>
