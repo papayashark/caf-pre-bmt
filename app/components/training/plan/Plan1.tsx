@@ -126,7 +126,7 @@ export default function Plan1() {
 
                     {planData.map((week) => (
                         <TabsContent key={week.weekNumber} value={`week-${week.weekNumber}`}>
-                            <Accordion type="multiple" className="w-full space-y-3">
+                            <Accordion className="w-full space-y-3">
                                 {week.days.map((day: any) => (
                                     <AccordionItem
                                         key={day.dayNumber}
