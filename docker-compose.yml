@@ -1,0 +1,32 @@
+services:
+  web:
+    image: node:20
+    working_dir: /app
+    environment:
+      - WATCHPACK_POLLING=true # Crucial: This ensures Hot-Reload works on Windows!
+      - DATABASE_URL=postgresql://us:pass@db:5432/betmasters?schema=public
+    volumes:
+      - .:/app                 # Mirrors your Windows code into the container
+      - /app/node_modules      # Keeps Linux dependencies safely inside the container
+      - /app/.next             # Keeps the Next.js build cache inside the container
+    ports:
+      - "3000:3000"
+      - "5555:5555"
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: us
+      POSTGRES_PASSWORD: pass
+      POSTRGRES_DB: betmasters
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes: 
+  pgdata:

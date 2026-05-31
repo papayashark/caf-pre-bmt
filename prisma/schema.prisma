@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Represents the user using the app
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  password      String
+  name          String?
+  // Relation to their saved progress
+  progressLogs  ProgressLog[]
+  progressData  String?  @default("{}")
+  emailVerified DateTime? 
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+// Represents a specific day the user worked out
+model ProgressLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  weekNumber  Int      // e.g., Week 1
+  dayNumber   Int      // e.g., Day 2
+  isCompleted Boolean  @default(false)
+  completedAt DateTime @default(now())
+
+  // We can save the checked exercises as a simple JSON string array for now
+  completedExercises String? 
+}
+
+model TrainingDay {
+  id         String   @id @default(cuid())
+  weekNumber Int
+  dayNumber  Int
+  type       String   // "Cardio", "Strength", "Rest Day", etc.
+  color      String   // "bg-blue-500", "bg-red-500", etc.
+  
+  // Seznam cviků uložíme jako JSON string (text), ze kterého na frontendu uděláme pole
+  exercises  String   
+
+  // Zajistíme, že v jednom týdnu nemůže být stejný den dvakrát
+  @@unique([weekNumber, dayNumber])
+}
