@@ -14,8 +14,8 @@ export async function GET() {
     // Přeformátujeme data do struktury, kterou očekává náš frontend (seskupíme dny do týdnů)
     const formattedPlan: any[] = [];
 
-    dbDays.forEach((day) => {
-      let week = formattedPlan.find(w => w.weekNumber === day.weekNumber);
+    dbDays.forEach((day: any) => {
+      let week = formattedPlan.find((w:any) => w.weekNumber === day.weekNumber);
       
       if (!week) {
         week = { weekNumber: day.weekNumber, days: [] };
