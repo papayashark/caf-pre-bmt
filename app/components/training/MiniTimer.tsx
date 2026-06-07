@@ -27,8 +27,17 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
     };
 
     // Watch for the timer to hit zero
+    // Watch for the timer to hit zero or countdown
     useEffect(() => {
-        if (timeLeft === 0 && isActive && phase !== "DONE") {
+        if (!isActive || phase === "DONE") return;
+
+        // Beep at 3, 2, and 1 seconds ONLY during the WORK phase (before rest)
+        if (phase === "WORK" && timeLeft <= 3 && timeLeft > 0) {
+            playAlarm();
+        }
+
+        // The final beep when time hits zero (for both Work and Rest)
+        if (timeLeft === 0) {
             playAlarm();
         }
     }, [timeLeft, isActive, phase]);
