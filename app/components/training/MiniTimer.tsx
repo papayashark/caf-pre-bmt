@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Square, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,42 +16,41 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
     const [timeLeft, setTimeLeft] = useState(workSec);
     const [currentSet, setCurrentSet] = useState(1);
 
+    // 1. TADY JE TEN CHYBĚJÍCÍ audioRef! (Here is the missing audioRef)
+    const audioRef = useRef<HTMLAudioElement>(null);
+
     const playAlarm = () => {
-        // Cesta začíná '/' což automaticky ukazuje do složky public
-        const audio = new Audio('/alarm.mp3'); 
-        // Přidali jsme .catch() pro zachycení případné chyby, kdyby prohlížeč zvuk zablokoval
-        audio.play().catch(e => console.log("Audio zablokováno prohlížečem:", e)); 
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0; // Rewind to start
+            audioRef.current.play().catch(e => console.log("Audio blocked:", e));
+        }
     };
 
-    // NOVÝ EFEKT: Jen "hlídá" čas a přehraje zvuk, když padne nula
+    // Watch for the timer to hit zero
     useEffect(() => {
         if (timeLeft === 0 && isActive && phase !== "DONE") {
             playAlarm();
         }
     }, [timeLeft, isActive, phase]);
 
-    // PŮVODNÍ EFEKT: Stará se o samotný odpočet a přepínání fází
+    // Handle the actual countdown
     useEffect(() => {
         let interval: NodeJS.Timeout;
 
         if (isActive && phase !== "DONE") {
             interval = setInterval(() => {
                 setTimeLeft((prevTime) => {
-                    // Pokud ještě zbývá čas, normálně odečítáme 1 vteřinu
                     if (prevTime > 0) return prevTime - 1;
 
-                    // Čas vypršel (je 0), řešíme přechod do další fáze
                     if (phase === "WORK") {
                         setPhase("REST");
                         return restSec;
                     } else if (phase === "REST") {
                         if (currentSet < totalSets) {
-                            // Jdeme na další sérii
                             setPhase("WORK");
                             setCurrentSet((prevSet) => prevSet + 1);
                             return workSec;
                         } else {
-                            // Všechny série jsou hotové
                             setPhase("DONE");
                             setIsActive(false);
                             return 0;
@@ -62,13 +61,33 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
             }, 1000);
         }
 
-        // Úklid po efektu, aby se nám intervaly nezbláznily
         return () => clearInterval(interval);
     }, [isActive, phase, currentSet, totalSets, workSec, restSec]);
 
-    // Pomocné funkce pro tlačítka
+    // Update timeLeft if the parent component changes the workSec (like switching weeks)
+    useEffect(() => {
+        if (!isActive && phase === "WORK") {
+            setTimeLeft(workSec);
+        }
+    }, [workSec, isActive, phase]);
+
+    // 2. TLAČÍTKA S ODBLOKOVÁNÍM ZVUKU (Buttons with Mobile Audio Unlock)
     const toggleTimer = () => {
-        if (phase !== "DONE") setIsActive(!isActive);
+        if (phase !== "DONE") {
+            // MOBILE AUDIO FIX: "Unlock" the audio on the very first tap
+            if (!isActive && audioRef.current) {
+                audioRef.current.volume = 0; // Mute it temporarily
+                audioRef.current.play().then(() => {
+                    audioRef.current?.pause(); // Pause it immediately
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = 0; // Reset to start
+                        audioRef.current.volume = 1; // Put volume back to normal for the real alarm
+                    }
+                }).catch(e => console.log("Audio unlock blocked:", e));
+            }
+
+            setIsActive(!isActive);
+        }
     };
 
     const resetTimer = () => {
@@ -78,7 +97,6 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
         setTimeLeft(workSec);
     };
 
-    // Vzhled komponentu
     return (
         <div className="flex flex-col items-center p-6 border rounded-xl bg-white shadow-sm max-w-sm w-full mx-auto space-y-4">
             <div className="text-center">
@@ -123,6 +141,9 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
                     Reset
                 </Button>
             </div>
+
+            {/* 3. NEVIDITELNÝ PŘEHRÁVAČ (Invisible Audio Player) */}
+            <audio ref={audioRef} src="/alarm.mp3" preload="auto" />
         </div>
     );
 }
