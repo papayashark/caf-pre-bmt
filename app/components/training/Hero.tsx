@@ -43,6 +43,7 @@ export default function Hero() {
                 // --- POHLED 1: DETAIL PLÁNU (zobrazí se po kliknutí) ---
                 <div className="space-y-6">
                     <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() => setSelectedPlan(null)} // Tlačítko vyprázdní krabičku -> návrat zpět
                     >
@@ -88,7 +89,7 @@ export default function Hero() {
                                 </CardContent>
                                 <CardFooter>
                                     <Button
-                                        className="w-full"
+                                        className="w-full cursor-pointer"
                                         onClick={() => setSelectedPlan(plan)} // Kliknutí vloží tento plán do krabičky
                                     >
                                         Show details

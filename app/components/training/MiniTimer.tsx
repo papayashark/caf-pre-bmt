@@ -16,83 +16,113 @@ export default function MiniTimer({ workSec = 20, restSec = 40, totalSets = 3 }:
     const [timeLeft, setTimeLeft] = useState(workSec);
     const [currentSet, setCurrentSet] = useState(1);
 
+    const playAlarm = () => {
+        // Cesta začíná '/' což automaticky ukazuje do složky public
+        const audio = new Audio('/alarm.mp3'); 
+        // Přidali jsme .catch() pro zachycení případné chyby, kdyby prohlížeč zvuk zablokoval
+        audio.play().catch(e => console.log("Audio zablokováno prohlížečem:", e)); 
+    };
+
+    // NOVÝ EFEKT: Jen "hlídá" čas a přehraje zvuk, když padne nula
+    useEffect(() => {
+        if (timeLeft === 0 && isActive && phase !== "DONE") {
+            playAlarm();
+        }
+    }, [timeLeft, isActive, phase]);
+
+    // PŮVODNÍ EFEKT: Stará se o samotný odpočet a přepínání fází
     useEffect(() => {
         let interval: NodeJS.Timeout;
+
         if (isActive && phase !== "DONE") {
             interval = setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev > 0) return prev - 1;
-                    
-                    // Fáze Práce skončila
+                setTimeLeft((prevTime) => {
+                    // Pokud ještě zbývá čas, normálně odečítáme 1 vteřinu
+                    if (prevTime > 0) return prevTime - 1;
+
+                    // Čas vypršel (je 0), řešíme přechod do další fáze
                     if (phase === "WORK") {
-                        // Pokud to byla poslední série, končíme
-                        if (currentSet >= totalSets) {
+                        setPhase("REST");
+                        return restSec;
+                    } else if (phase === "REST") {
+                        if (currentSet < totalSets) {
+                            // Jdeme na další sérii
+                            setPhase("WORK");
+                            setCurrentSet((prevSet) => prevSet + 1);
+                            return workSec;
+                        } else {
+                            // Všechny série jsou hotové
                             setPhase("DONE");
                             setIsActive(false);
                             return 0;
                         }
-                        // Jinak jdeme odpočívat
-                        setPhase("REST");
-                        return restSec;
-                    } else {
-                        // Fáze Odpočinku skončila, jdeme na další sérii
-                        setCurrentSet((s) => s + 1);
-                        setPhase("WORK");
-                        return workSec;
                     }
+                    return 0;
                 });
             }, 1000);
         }
-        return () => clearInterval(interval);
-    }, [isActive, phase, currentSet, workSec, restSec, totalSets]);
 
-    const toggleTimer = () => setIsActive(!isActive);
-    const resetTimer = () => { 
-        setIsActive(false); 
-        setPhase("WORK"); 
-        setCurrentSet(1);
-        setTimeLeft(workSec); 
+        // Úklid po efektu, aby se nám intervaly nezbláznily
+        return () => clearInterval(interval);
+    }, [isActive, phase, currentSet, totalSets, workSec, restSec]);
+
+    // Pomocné funkce pro tlačítka
+    const toggleTimer = () => {
+        if (phase !== "DONE") setIsActive(!isActive);
     };
 
-    if (phase === "DONE") {
-        return (
-            <div 
-                className="flex items-center gap-2 text-green-600 dark:text-green-500 font-bold text-sm bg-green-500/10 px-3 py-1.5 rounded-md cursor-pointer border border-green-500/30 transition-all hover:bg-green-500/20" 
-                onClick={resetTimer}
-            >
-                <CheckCircle2 className="w-5 h-5" /> 
-                <span>DONE ({totalSets}/{totalSets})</span>
-            </div>
-        );
-    }
+    const resetTimer = () => {
+        setIsActive(false);
+        setPhase("WORK");
+        setCurrentSet(1);
+        setTimeLeft(workSec);
+    };
 
+    // Vzhled komponentu
     return (
-        <div className={`flex items-center gap-3 px-3 py-1.5 rounded-md border transition-colors ${
-            phase === "WORK" && isActive ? "bg-green-500/10 border-green-500 text-green-600 dark:text-green-500" 
-            : phase === "REST" ? "bg-red-500/10 border-red-500 text-red-500 dark:text-red-400" 
-            : "bg-muted border-border"
-        }`}>
-            {/* Čas a Fáze */}
-            <div className="flex flex-col items-center justify-center min-w-[3.5rem]">
-                <span className="font-bold tabular-nums text-sm leading-none">
-                    {timeLeft}s
-                </span>
-                <span className="text-[10px] uppercase font-extrabold opacity-70 leading-none mt-1 tracking-wider">
+        <div className="flex flex-col items-center p-6 border rounded-xl bg-white shadow-sm max-w-sm w-full mx-auto space-y-4">
+            <div className="text-center">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    Set {currentSet} / {totalSets}
+                </h3>
+                
+                <h2 className={`text-2xl font-bold uppercase tracking-widest transition-colors duration-300 ${
+                    phase === "WORK" ? "text-red-500" : 
+                    phase === "REST" ? "text-blue-500" : 
+                    "text-green-500"
+                }`}>
                     {phase}
-                </span>
-            </div>
-            
-            {/* Ukazatel Série */}
-            <div className="flex flex-col items-center border-l pl-3 border-current/20">
-                <span className="text-xs font-bold whitespace-nowrap opacity-90">
-                    Set {currentSet}/{totalSets}
-                </span>
+                </h2>
+                
+                <div className="text-7xl font-mono mt-2 font-light text-gray-800">
+                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                </div>
             </div>
 
-            {/* Tlačítko */}
-            <Button size="icon" variant="ghost" className="h-7 w-7 ml-1 hover:bg-transparent" onClick={toggleTimer}>
-                {isActive ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-            </Button>
+            <div className="flex space-x-3 w-full mt-4">
+                {phase !== "DONE" ? (
+                    <Button 
+                        onClick={toggleTimer} 
+                        className="flex-1 cursor-pointer text-lg py-6"
+                        variant={isActive ? "secondary" : "default"}
+                    >
+                        {isActive ? <Square className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5 fill-current" />}
+                        {isActive ? "Pause" : "Start"}
+                    </Button>
+                ) : (
+                    <Button disabled className="flex-1 bg-green-500 text-white opacity-100 py-6 text-lg">
+                        <CheckCircle2 className="mr-2 h-5 w-5" /> Finished
+                    </Button>
+                )}
+                
+                <Button 
+                    variant="outline" 
+                    onClick={resetTimer} 
+                    className="cursor-pointer py-6"
+                >
+                    Reset
+                </Button>
+            </div>
         </div>
     );
 }

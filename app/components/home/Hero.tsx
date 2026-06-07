@@ -16,7 +16,7 @@ export default function Hero() {
                 </p>
                 <div className="pt-8">
                     <Link href="/training">
-                        <Button size="lg" className="text=lg px-8 py-6 font-bold uppercase tracking-widest shadow-lg hover:scale-105 transition-transform">
+                        <Button size="lg" className="cursor-pointer text=lg px-8 py-6 font-bold uppercase tracking-widest shadow-lg hover:scale-105 transition-transform">
                             Show Training Plan
                         </Button>
                     </Link>

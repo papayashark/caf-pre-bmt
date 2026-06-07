@@ -79,7 +79,11 @@ export default function Plan1() {
         );
     }
 
+    
+
     return (
+
+        
         <div className="w-full space-y-12">
             
             {/* --- SECTON 1: GENERAL INSTRUCTIONS --- */}
@@ -154,6 +158,18 @@ export default function Plan1() {
                                                                            exercise.toLowerCase().includes("warm-up") || 
                                                                            exercise.toLowerCase().includes("rest");
 
+                                                                           // 👇 1. AJOUTE LA LOGIQUE DU TEMPS ICI 👇
+                                                    let workDuration = 20; // Temps par défaut (Circuit 1, etc.)
+                                                    let restDuration = 40;
+
+                                                    if (week.weekNumber >= 5 && week.weekNumber <= 8) {
+                                                        workDuration = 30;
+                                                        restDuration = 30;
+                                                    } else if (week.weekNumber >= 9 && week.weekNumber <= 12) {
+                                                        workDuration = 45;
+                                                        restDuration = 15;
+                                                    }
+
                                                     return (
                                                         <li key={exerciseId} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl hover:bg-muted/30 transition-colors border bg-card/40 shadow-sm">
                                                             
@@ -174,9 +190,14 @@ export default function Plan1() {
                                                                 </label>
                                                             </div>
 
+                                                            
+
                                                             {!isWarmupOrWalk && (
                                                                 <div className="ml-8 lg:ml-0 flex-shrink-0">
-                                                                    <MiniTimer workSec={20} restSec={40} totalSets={1} />
+                                                                    {!exercise.toLowerCase().includes("jogging") && (
+                                                                        <MiniTimer workSec={workDuration} restSec={restDuration} totalSets={3} />
+                                                                    )}
+                                                                    
                                                                 </div>
                                                             )}
                                                         </li>

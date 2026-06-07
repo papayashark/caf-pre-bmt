@@ -65,7 +65,7 @@ export default function Navbar({ title }: navbarProps) {
                     // 3. LOGGED OUT STATE
                     <div>
                         <Link href="/login">
-                            <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                            <button className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
                                 Log In
                             </button>
                         </Link>
